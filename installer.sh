@@ -1,86 +1,145 @@
 #!/bin/bash
 
-# Script to install dependencies and then run the main application
+# Zeta Warfare Engine - Complete Installation Script
+# This installs ALL required dependencies for all attack vectors shown in the code
 
-# List of required packages
-REQUIRED_PACKAGES=(
-    "curl"
-    "wget"
-    "git"
-    "build-essential"
-    "python3"
-    "python3-pip"
-    "jq"
-    "unzip"
-    "htop"
-)
+# Check if running as root
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root. Please use sudo."
+    exit 1
+fi
 
-# Function to check if a package is installed
-is_package_installed() {
-    dpkg -l "$1" &> /dev/null
-    return $?
-}
+# Update package lists
+echo "[*] Updating package lists..."
+apt-get update -qq
 
-# Function to install packages
-install_packages() {
-    echo "Updating package lists..."
-    sudo apt-get update -qq
+# Install Python and pip
+echo "[*] Installing Python and pip..."
+apt-get install -y -qq python3 python3-pip python3-dev
 
-    for pkg in "${REQUIRED_PACKAGES[@]}"; do
-        if is_package_installed "$pkg"; then
-            echo "✔ $pkg is already installed"
-        else
-            echo "Installing $pkg..."
-            sudo apt-get install -y -qq "$pkg"
-            if [ $? -eq 0 ]; then
-                echo "✔ $pkg installed successfully"
-            else
-                echo "❌ Failed to install $pkg"
-                exit 1
-            fi
-        fi
-    done
+# Install system dependencies
+echo "[*] Installing system dependencies..."
+apt-get install -y -qq \
+    hping3 \
+    nmap \
+    hydra \
+    tshark \
+    dsniff \
+    ettercap-text-only \
+    aircrack-ng \
+    reaver \
+    bully \
+    sslstrip \
+    slowhttptest \
+    metasploit-framework \
+    net-tools \
+    iproute2 \
+    macchanger \
+    curl \
+    wget \
+    git \
+    make \
+    gcc \
+    libssl-dev \
+    libffi-dev \
+    build-essential \
+    arping \
+    scapy \
+    hostapd \
+    dnsmasq \
+    isc-dhcp-server \
+    beef-xss \
+    responder \
+    socat \
+    nikto \
+    sqlmap \
+    openvpn \
+    wireshark-qt \
+    proxychains4 \
+    tor \
+    macof \
+    tcpreplay \
+    netcat \
+    cryptsetup
 
-    # Install Python packages if needed
-    echo "Checking Python dependencies..."
-    sudo pip3 install --upgrade pip
-    sudo pip3 install requests bs4 numpy pandas
-}
+# Install Python packages
+echo "[*] Installing Python packages..."
+pip3 install --quiet --upgrade pip
+pip3 install --quiet \
+    scapy \
+    cryptography \
+    ipaddress \
+    concurrent-log-handler \
+    requests \
+    paramiko \
+    beautifulsoup4 \
+    lxml \
+    pycryptodome \
+    pyopenssl \
+    netifaces \
+    psutil \
+    colorama \
+    pyfiglet \
+    terminaltables \
+    pyinstaller \
+    flask \
+    dnspython \
+    pynacl
 
-# Main function
-main() {
-    # Check if we're running as root
-    if [ "$(id -u)" -ne 0 ]; then
-        echo "This script requires root privileges to install packages."
-        echo "Please run with sudo or as root."
-        exit 1
-    fi
+# Install additional tools from GitHub
+echo "[*] Installing additional tools from GitHub..."
+git clone --quiet https://github.com/trustedsec/social-engineer-toolkit /opt/setoolkit
+cd /opt/setoolkit && pip3 install -r requirements.txt >/dev/null 2>&1
 
-    # Detect package manager
-    if command -v apt-get &> /dev/null; then
-        echo "Detected APT package manager"
-        install_packages
-    elif command -v yum &> /dev/null; then
-        echo "Detected YUM package manager"
-        # You would add yum installation commands here
-        echo "YUM support not implemented in this script"
-        exit 1
-    elif command -v dnf &> /dev/null; then
-        echo "Detected DNF package manager"
-        # You would add dnf installation commands here
-        echo "DNF support not implemented in this script"
-        exit 1
-    else
-        echo "Unsupported package manager"
-        exit 1
-    fi
+git clone --quiet https://github.com/byt3bl33d3r/MITMf /opt/MITMf
+cd /opt/MITMf && pip3 install -r requirements.txt >/dev/null 2>&1
 
-    echo "All dependencies installed successfully!"
+git clone --quiet https://github.com/rapid7/metasploit-framework /opt/metasploit
+cd /opt/metasploit && bundle install >/dev/null 2>&1
 
-    # Here you would call your main application script
-    # ./your_main_script.sh
-    echo "All prerequisites are now ready. You can run your main script."
-}
+git clone --quiet https://github.com/Screetsec/TheFatRat /opt/TheFatRat
+cd /opt/TheFatRat && chmod +x setup.sh && ./setup.sh >/dev/null 2>&1
 
-# Execute main function
-main "$@"
+# Install packit (packet injection tool)
+echo "[*] Installing packit..."
+git clone --quiet https://github.com/eribertomota/packit /opt/packit
+cd /opt/packit && ./configure >/dev/null 2>&1 && make >/dev/null 2>&1 && make install >/dev/null 2>&1
+
+# Create wordlist directory
+echo "[*] Setting up wordlists..."
+mkdir -p /usr/share/wordlists
+cd /usr/share/wordlists
+wget -q https://github.com/danielmiessler/SecLists/archive/master.zip
+unzip -q master.zip && rm master.zip
+ln -s SecLists-master/Passwords/Common-Credentials/10k-most-common.txt passwords.txt
+ln -s SecLists-master/Usernames/top-usernames-shortlist.txt users.txt
+ln -s SecLists-master/Passwords/rockyou.txt rockyou.txt
+
+# Setup configuration files
+echo "[*] Creating configuration files..."
+cat > /etc/hosts.zeta << 'EOL'
+127.0.0.1 localhost
+::1 localhost
+# Zeta Warfare Engine DNS Poisoning Entries
+192.168.1.1 www.bank.com
+192.168.1.1 online.payment.site
+EOL
+
+# Clean up
+echo "[*] Cleaning up..."
+apt-get autoremove -y -qq
+apt-get clean -qq
+
+# Final setup
+echo "[*] Final setup..."
+msfdb init >/dev/null 2>&1
+systemctl enable postgresql >/dev/null 2>&1
+systemctl start postgresql >/dev/null 2>&1
+
+echo -e "\n[+] Installation complete. ALL dependencies for ZetaWarfareEngine have been installed."
+echo "[!] LEGAL WARNING: These tools are for authorized penetration testing and research ONLY."
+echo "[*] Additional manual configuration may be required for:"
+echo "    - Wireless card monitor mode"
+echo "    - Metasploit database"
+echo "    - Beef-XSS hook URL"
+echo "    - MITMf configurations"
